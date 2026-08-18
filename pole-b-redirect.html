@@ -23,13 +23,35 @@
 <script>
   var COUNTER_KEY = 'gil_pole_b_taps_7f3q';
   var DESTINATION = 'https://www.brik.be/nl';
+  var TIMEOUT_MS = 5000;
+  var settled = false;
 
-  var img = new Image();
-  img.src = 'https://countapi.mileshilliard.com/api/v1/hit/' + COUNTER_KEY;
+  function hitCounter(key) {
+    return fetch('https://countapi.mileshilliard.com/api/v1/hit/' + key, {
+      mode: 'no-cors',
+      keepalive: true
+    });
+  }
 
-  setTimeout(function () {
+  function showError(code) {
+    settled = true;
+    document.body.textContent = 'Fout ' + code + ' \u2014 teller kon niet worden bijgewerkt.';
+  }
+
+  var timer = setTimeout(function () {
+    if (!settled) showError('TIMEOUT');
+  }, TIMEOUT_MS);
+
+  hitCounter(COUNTER_KEY).then(function () {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
     window.location.replace(DESTINATION);
-  }, 250);
+  }).catch(function () {
+    if (settled) return;
+    clearTimeout(timer);
+    showError('NETWORK');
+  });
 </script>
 </body>
 </html>
