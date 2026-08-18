@@ -27,8 +27,11 @@
   var settled = false;
 
   function hitCounter(key) {
-    return fetch('https://countapi.mileshilliard.com/api/v1/hit/' + key, {
-      keepalive: true
+    var url = 'https://countapi.mileshilliard.com/api/v1/hit/' + key
+      + '?cb=' + Date.now() + Math.random().toString(36).slice(2);
+    return fetch(url, {
+      keepalive: true,
+      cache: 'no-store'
     }).then(function (res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();

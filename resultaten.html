@@ -174,7 +174,9 @@
 
   async function fetchCount(key) {
     try {
-      var res = await fetch('https://countapi.mileshilliard.com/api/v1/get/' + key);
+      var url = 'https://countapi.mileshilliard.com/api/v1/get/' + key
+        + '?cb=' + Date.now() + Math.random().toString(36).slice(2);
+      var res = await fetch(url, { cache: 'no-store' });
       var data = await res.json();
       return parseInt(data.value, 10) || 0;
     } catch (e) {
