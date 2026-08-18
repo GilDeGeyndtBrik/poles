@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultaten</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #23262b;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #d9d5cc;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 28px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .plaque {
+    position: relative;
+    background: linear-gradient(180deg, #3a3f47 0%, #2c3036 100%);
+    border-radius: 10px;
+    padding: 32px 28px 26px;
+    width: 100%;
+    max-width: 300px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 16px 32px rgba(0,0,0,0.4);
+  }
+  .rivet {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #8a7748, #5c4e28 70%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .rivet.tl { top: 10px; left: 10px; }
+  .rivet.tr { top: 10px; right: 10px; }
+  .rivet.bl { bottom: 10px; left: 10px; }
+  .rivet.br { bottom: 10px; right: 10px; }
+  .label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: #a9a29a;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .pole-name {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .pole-name.a { color: #c9a227; }
+  .pole-name.b { color: #5da8e0; }
+  .window {
+    background: #16181b;
+    border-radius: 6px;
+    padding: 16px 8px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+  }
+  .digit {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 34px;
+    background: #0e0f11;
+    border-radius: 3px;
+    padding: 4px 5px;
+    min-width: 24px;
+    text-align: center;
+    line-height: 1;
+  }
+  .digit.a { color: #c9a227; }
+  .digit.b { color: #5da8e0; }
+  .updated {
+    text-align: center;
+    font-size: 12px;
+    color: #6f6c65;
+    margin-top: 26px;
+  }
+  .refresh {
+    display: block;
+    margin: 16px auto 0;
+    background: transparent;
+    border: 1px solid #4a4e55;
+    color: #a9a29a;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .refresh:hover { border-color: #6f747c; color: #d9d5cc; }
+  .buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  .reset {
+    background: transparent;
+    border: 1px solid #6b3a3a;
+    color: #c98a8a;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .reset:hover { border-color: #a35050; color: #e6a9a9; }
+</style>
+</head>
+<body>
+  <h1>Resultaten</h1>
+  <div class="row">
+    <div class="plaque">
+      <div class="rivet tl"></div>
+      <div class="rivet tr"></div>
+      <div class="rivet bl"></div>
+      <div class="rivet br"></div>
+      <div class="label">Totaal taps</div>
+      <div class="pole-name a">Pole A</div>
+      <div class="window" id="digits-a"></div>
+    </div>
+    <div class="plaque">
+      <div class="rivet tl"></div>
+      <div class="rivet tr"></div>
+      <div class="rivet bl"></div>
+      <div class="rivet br"></div>
+      <div class="label">Totaal taps</div>
+      <div class="pole-name b">Pole B</div>
+      <div class="window" id="digits-b"></div>
+    </div>
+  </div>
+  <div class="updated" id="updated">Laden&hellip;</div>
+  <div class="buttons">
+    <button class="refresh" id="refresh-btn">Vernieuwen</button>
+    <button class="reset" id="reset-btn">Reset tellers</button>
+  </div>
+
+<script>
+  var KEYS = {
+    a: 'gil_pole_a_taps_7f3q',
+    b: 'gil_pole_b_taps_7f3q'
+  };
+
+  function renderDigits(elId, cls, n) {
+    var el = document.getElementById(elId);
+    var str = String(n).padStart(4, '0');
+    el.innerHTML = '';
+    for (var i = 0; i < str.length; i++) {
+      var d = document.createElement('div');
+      d.className = 'digit ' + cls;
+      d.textContent = str[i];
+      el.appendChild(d);
+    }
+  }
+
+  async function fetchCount(key) {
+    try {
+      var res = await fetch('https://countapi.mileshilliard.com/api/v1/get/' + key);
+      var data = await res.json();
+      return parseInt(data.value, 10) || 0;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async function loadAll() {
+    document.getElementById('updated').textContent = 'Laden\u2026';
+    var a = await fetchCount(KEYS.a);
+    var b = await fetchCount(KEYS.b);
+
+    renderDigits('digits-a', 'a', a === null ? 0 : a);
+    renderDigits('digits-b', 'b', b === null ? 0 : b);
+
+    if (a === null || b === null) {
+      document.getElementById('updated').textContent = 'Kon niet alle tellers laden. Probeer opnieuw.';
+    } else {
+      var now = new Date();
+      document.getElementById('updated').textContent =
+        'Bijgewerkt om ' + now.toLocaleTimeString('nl-BE', { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+
+  async function resetCount(key) {
+    try {
+      var res = await fetch('https://countapi.mileshilliard.com/api/v1/set/' + key + '?value=0');
+      var data = await res.json();
+      return data && data.value !== undefined;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function resetAll() {
+    var sure = window.confirm('Beide tellers terugzetten naar 0? Dit kan niet ongedaan worden gemaakt.');
+    if (!sure) return;
+
+    var resetBtn = document.getElementById('reset-btn');
+    resetBtn.disabled = true;
+    resetBtn.textContent = 'Bezig\u2026';
+
+    var okA = await resetCount(KEYS.a);
+    var okB = await resetCount(KEYS.b);
+
+    resetBtn.disabled = false;
+    resetBtn.textContent = 'Reset tellers';
+
+    if (okA && okB) {
+      await loadAll();
+    } else {
+      document.getElementById('updated').textContent = 'Reset niet volledig gelukt. Probeer opnieuw.';
+    }
+  }
+
+  document.getElementById('refresh-btn').addEventListener('click', loadAll);
+  document.getElementById('reset-btn').addEventListener('click', resetAll);
+  loadAll();
+</script>
+</body>
+</html>
