@@ -66,6 +66,9 @@
   }
   .pole-name.a { color: #c9a227; }
   .pole-name.b { color: #5da8e0; }
+  .pole-name.c { color: #63b17a; }
+  .pole-name.d { color: #b06fc9; }
+  .pole-name.e { color: #d97a5a; }
   .window {
     background: #16181b;
     border-radius: 6px;
@@ -88,6 +91,9 @@
   }
   .digit.a { color: #c9a227; }
   .digit.b { color: #5da8e0; }
+  .digit.c { color: #63b17a; }
+  .digit.d { color: #b06fc9; }
+  .digit.e { color: #d97a5a; }
   .updated {
     text-align: center;
     font-size: 12px;
@@ -147,6 +153,33 @@
       <div class="pole-name b">Pole B</div>
       <div class="window" id="digits-b"></div>
     </div>
+    <div class="plaque">
+      <div class="rivet tl"></div>
+      <div class="rivet tr"></div>
+      <div class="rivet bl"></div>
+      <div class="rivet br"></div>
+      <div class="label">Totaal taps</div>
+      <div class="pole-name c">Pole C</div>
+      <div class="window" id="digits-c"></div>
+    </div>
+    <div class="plaque">
+      <div class="rivet tl"></div>
+      <div class="rivet tr"></div>
+      <div class="rivet bl"></div>
+      <div class="rivet br"></div>
+      <div class="label">Totaal taps</div>
+      <div class="pole-name d">Pole D</div>
+      <div class="window" id="digits-d"></div>
+    </div>
+    <div class="plaque">
+      <div class="rivet tl"></div>
+      <div class="rivet tr"></div>
+      <div class="rivet bl"></div>
+      <div class="rivet br"></div>
+      <div class="label">Totaal taps</div>
+      <div class="pole-name e">Pole E</div>
+      <div class="window" id="digits-e"></div>
+    </div>
   </div>
   <div class="updated" id="updated">Laden&hellip;</div>
   <div class="buttons">
@@ -157,7 +190,10 @@
 <script>
   var KEYS = {
     a: 'gil_pole_a_taps_7f3q',
-    b: 'gil_pole_b_taps_7f3q'
+    b: 'gil_pole_b_taps_7f3q',
+    c: 'gil_pole_c_taps_7f3q',
+    d: 'gil_pole_d_taps_7f3q',
+    e: 'gil_pole_e_taps_7f3q'
   };
 
   function renderDigits(elId, cls, n) {
@@ -186,13 +222,21 @@
 
   async function loadAll() {
     document.getElementById('updated').textContent = 'Laden\u2026';
-    var a = await fetchCount(KEYS.a);
-    var b = await fetchCount(KEYS.b);
+    var results = {};
+    var letters = ['a', 'b', 'c', 'd', 'e'];
+    for (var i = 0; i < letters.length; i++) {
+      results[letters[i]] = await fetchCount(KEYS[letters[i]]);
+    }
 
-    renderDigits('digits-a', 'a', a === null ? 0 : a);
-    renderDigits('digits-b', 'b', b === null ? 0 : b);
+    var anyFailed = false;
+    for (var j = 0; j < letters.length; j++) {
+      var l = letters[j];
+      var v = results[l];
+      if (v === null) anyFailed = true;
+      renderDigits('digits-' + l, l, v === null ? 0 : v);
+    }
 
-    if (a === null || b === null) {
+    if (anyFailed) {
       document.getElementById('updated').textContent = 'Kon niet alle tellers laden. Probeer opnieuw.';
     } else {
       var now = new Date();
@@ -212,20 +256,24 @@
   }
 
   async function resetAll() {
-    var sure = window.confirm('Beide tellers terugzetten naar 0? Dit kan niet ongedaan worden gemaakt.');
+    var sure = window.confirm('Alle vijf tellers terugzetten naar 0? Dit kan niet ongedaan worden gemaakt.');
     if (!sure) return;
 
     var resetBtn = document.getElementById('reset-btn');
     resetBtn.disabled = true;
     resetBtn.textContent = 'Bezig\u2026';
 
-    var okA = await resetCount(KEYS.a);
-    var okB = await resetCount(KEYS.b);
+    var letters = ['a', 'b', 'c', 'd', 'e'];
+    var allOk = true;
+    for (var i = 0; i < letters.length; i++) {
+      var ok = await resetCount(KEYS[letters[i]]);
+      if (!ok) allOk = false;
+    }
 
     resetBtn.disabled = false;
     resetBtn.textContent = 'Reset tellers';
 
-    if (okA && okB) {
+    if (allOk) {
       await loadAll();
     } else {
       document.getElementById('updated').textContent = 'Reset niet volledig gelukt. Probeer opnieuw.';
