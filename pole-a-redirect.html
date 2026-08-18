@@ -23,7 +23,6 @@
 <script>
   var COUNTER_KEY = 'gil_pole_a_taps_7f3q';
   var DESTINATION = 'https://www.brik.be/nl';
-  var HOLD_MS = 5000;
 
   function hitCounter(key) {
     var url = 'https://countapi.mileshilliard.com/api/v1/hit/' + key
@@ -40,22 +39,12 @@
     });
   }
 
-  function setStatus(text) {
-    document.body.textContent = text;
-  }
-
-  var startTime = Date.now();
-
   hitCounter(COUNTER_KEY).then(function (data) {
-    setStatus('Teller bijgewerkt: ' + data.value + '. Doorverwijzen over 5 sec\u2026');
+    console.log('[pole-a] counter updated, new value: ' + data.value);
   }).catch(function (err) {
-    setStatus('Fout: ' + err.message + '. Ga toch door over 5 sec\u2026');
+    console.error('[pole-a] counter update failed: ' + err.message);
   }).finally(function () {
-    var elapsed = Date.now() - startTime;
-    var remaining = Math.max(0, HOLD_MS - elapsed);
-    setTimeout(function () {
-      window.location.replace(DESTINATION);
-    }, remaining);
+    window.location.replace(DESTINATION);
   });
 </script>
 </body>
