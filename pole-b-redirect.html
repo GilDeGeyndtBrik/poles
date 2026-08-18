@@ -23,6 +23,8 @@
 <script>
   var COUNTER_KEY = 'gil_pole_b_taps_7f3q';
   var DESTINATION = 'https://www.brik.be/nl';
+  var GUARD_KEY = 'pole_b_hit_guard';
+  var GUARD_WINDOW_MS = 4000;
 
   function hitCounter(key) {
     var url = 'https://countapi.mileshilliard.com/api/v1/hit/' + key
@@ -39,13 +41,29 @@
     });
   }
 
-  hitCounter(COUNTER_KEY).then(function (data) {
-    console.log('[pole-b] counter updated, new value: ' + data.value);
-  }).catch(function (err) {
-    console.error('[pole-b] counter update failed: ' + err.message);
-  }).finally(function () {
+  function alreadyCountedRecently() {
+    try {
+      var last = sessionStorage.getItem(GUARD_KEY);
+      if (last && (Date.now() - parseInt(last, 10)) < GUARD_WINDOW_MS) return true;
+      sessionStorage.setItem(GUARD_KEY, String(Date.now()));
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  if (alreadyCountedRecently()) {
+    console.log('[pole-b] duplicate load detected, skipping extra count');
     window.location.replace(DESTINATION);
-  });
+  } else {
+    hitCounter(COUNTER_KEY).then(function (data) {
+      console.log('[pole-b] counter updated, new value: ' + data.value);
+    }).catch(function (err) {
+      console.error('[pole-b] counter update failed: ' + err.message);
+    }).finally(function () {
+      window.location.replace(DESTINATION);
+    });
+  }
 </script>
 </body>
 </html>
