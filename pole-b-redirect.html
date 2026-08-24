@@ -43,26 +43,42 @@
 
   function alreadyCountedRecently() {
     try {
-      var last = sessionStorage.getItem(GUARD_KEY);
+      // localStorage (not sessionStorage) so the guard is shared across tabs:
+      // browsers that speculatively preload/prerender a typed-in URL (e.g.
+      // Safari's "Preload Top Hit", Chrome's address-bar prerendering) can run
+      // this script once in a hidden tab and once in the real one. sessionStorage
+      // is per-tab and misses that; localStorage is shared per-origin.
+      var last = localStorage.getItem(GUARD_KEY);
       if (last && (Date.now() - parseInt(last, 10)) < GUARD_WINDOW_MS) return true;
-      sessionStorage.setItem(GUARD_KEY, String(Date.now()));
+      localStorage.setItem(GUARD_KEY, String(Date.now()));
       return false;
     } catch (e) {
       return false;
     }
   }
 
-  if (alreadyCountedRecently()) {
-    console.log('[pole-b] duplicate load detected, skipping extra count');
-    window.location.replace(DESTINATION);
-  } else {
-    hitCounter(COUNTER_KEY).then(function (data) {
-      console.log('[pole-b] counter updated, new value: ' + data.value);
-    }).catch(function (err) {
-      console.error('[pole-b] counter update failed: ' + err.message);
-    }).finally(function () {
+  function runTap() {
+    if (alreadyCountedRecently()) {
+      console.log('[pole-b] duplicate load detected, skipping extra count');
       window.location.replace(DESTINATION);
-    });
+    } else {
+      hitCounter(COUNTER_KEY).then(function (data) {
+        console.log('[pole-b] counter updated, new value: ' + data.value);
+      }).catch(function (err) {
+        console.error('[pole-b] counter update failed: ' + err.message);
+      }).finally(function () {
+        window.location.replace(DESTINATION);
+      });
+    }
+  }
+
+  if (document.prerendering) {
+    // Speculatively pre-rendered in the background (address-bar prediction /
+    // link preview). Don't count or redirect until it's actually activated as
+    // the visible page, otherwise a background preload alone counts as a tap.
+    document.addEventListener('prerenderingchange', runTap, { once: true });
+  } else {
+    runTap();
   }
 </script>
 </body>
